@@ -44,3 +44,66 @@ def _(thing: bool):
 @to_string.register
 def _(thing: NoneType):
     return 'NIL'
+
+def consume_whitespace(string, i):
+    while string[i] in '\u0009\u000A\u000B\u000C\u000D\u0020':
+        i = i+1
+    return i
+
+def read_list(string, i=0):
+    if string[i] == '(':
+        i = i+1
+        items = []
+        while string[i] != ')' and string[i] != '\0':
+            (item, ni) = from_string(string, i)
+            i = consume_whitespace(string, ni)
+            items.append(item)
+        return (items, i)
+
+def read_string(string, i=0):
+    if string[i] == '"':
+        i = i+1
+        result = ''
+        while string[i] != '"' and string[i] != '\0':
+            if string[i] == '\\':
+                i = i+1
+            result = result+string[i]
+            i = i+1
+        return (result, i)
+
+def read_number_part(string, i=0):
+    decimal = 0
+    while string[i] in '0123456789':
+        decimal = decimal*10 + (ord(string[i])-48)
+        i = i+1
+    return (decimal, i)
+
+def read_number(string, i=0):
+    if string[i] in '0123456789.':
+        (decimal, i) = read_number_part(string, i)
+        if string[i] == '.':
+            (fract, ni) = read_number_part(string, i)
+            num = decimal + fract / (10.0 ** (ni-i))
+            return (num, ni)
+        return (decimal, i)
+
+def read_symbol(string, i=0):
+    name = ''
+    (package, i) = read_token(string, i)
+    if string[i] == ':':
+        if package == '':
+            package = 'keyword'
+        else:
+            (name, ni) = read_token(string, i)
+            i = ni
+    else:
+        name = package
+        package = 'lichat-protocol'
+    return (find_symbol(name, package), i)
+
+def from_string(string, i=0):
+    i = consume_whitespace(string, i)
+    read_list(string, i)
+    or read_string(string, i)
+    or read_number(string, i)
+    or read_symbol(string, i)
