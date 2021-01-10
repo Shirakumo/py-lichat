@@ -7,7 +7,7 @@ float_ctx.prec = 20
 
 @singledispatch
 def to_string(thing):
-    raise ValueError("Don't know what to do with this.")
+    raise ValueError("Don't know what to do with {0}.".format(thing))
 
 def strchar(x):
     if x == '"': return '\\"'

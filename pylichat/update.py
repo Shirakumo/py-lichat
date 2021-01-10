@@ -33,8 +33,9 @@ def register_class(symbol, clazz):
 def find_class(symbol):
     return class_registry.get(symbol, None)
 
-def make_instance(symbol, **initargs):
-    clazz = find_class(symbol)
+def make_instance(clazz, **initargs):
+    if type(clazz) == tuple:
+        clazz = find_class(clazz)
     if clazz == None:
         return None
     return clazz(**initargs)

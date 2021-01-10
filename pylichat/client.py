@@ -46,7 +46,6 @@ class Client:
         self.extensions = []
         self.id = 0
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setblocking(false)
         self.chunks = []
         self.channels = {}
         self.emotes = {}
@@ -61,6 +60,7 @@ class Client:
             self.channels.clear()
             self.chunks = []
             self.extensions = []
+            self.socket.close()
         
         def ping(self, u):
             self.send(update.Pong)
@@ -69,7 +69,7 @@ class Client:
             if self.servername == None:
                 self.servername = u.channel
                 if self.is_supported('shirakumo-emotes'):
-                    self.send(update.Emotes, names=self.emotes.keys())
+                    self.send(update.Emotes, names=list(self.emotes.keys()))
             if u['from'] == self.username:
                 self.channels[u.channel] = Channel(u.channel)
                 if self.is_supported('shirakumo-channel-info'):
@@ -93,6 +93,7 @@ class Client:
                 channel[u.key] = u.value
             
         self.handlers = {
+            update.Update: [],
             update.Connect: [connect],
             update.Disconnect: [disconnect],
             update.Ping: [ping],
@@ -102,26 +103,43 @@ class Client:
             update.SetChannelInfo: [channelinfo]
         }
 
+    def add_handler(self, update, fun):
+        if update not in self.handlers:
+            self.handlers[update] = []
+        self.handlers[update].append(fun)
+
     def clock():
         int(time.time()) + 2208988800
 
-    def next_id():
+    def next_id(self):
         self.id = self.id+1
         return self.id
 
     def is_supported(self, extension):
         return extension in self.extensions
 
+    def connect(self, host, port=1111, timeout=10.0):
+        self.connect_raw(host, port)
+        self.send(update.Connect, version=update.version, extensions=update.extensions)
+        updates = self.recv(timeout)
+        if updates:
+            if type(updates[0]) is not update.Connect:
+                raise ConnectionFailed(update=update)
+            for instance in updates:
+                self.handle(instance)
+        else:
+            raise ConnectionFailed(message="Timeout")
+
     def send(self, type, **args):
         args['from'] = self.username
-        args['clock'] = self.clock()
+        args['clock'] = Client.clock()
         args['id'] = self.next_id()
-        instance = update.make_instance(symbol.li(type), **args)
+        instance = update.make_instance(type, **args)
         self.send_raw(wire.to_string(instance.to_list()))
         return instance.id
 
     def recv(self, timeout=0):
-        strings = recv_raw(timeout)
+        strings = self.recv_raw(timeout)
         updates = []
         for string in strings:
             (update, _i) = read_update(string)
@@ -129,52 +147,54 @@ class Client:
                 updates.append(update)
         return updates
 
-    def handle(self, update):
-        for handler in self.handlers.get(update.__class__, []):
-            handler(self, update)
+    def handle(self, instance):
+        handlers = self.handlers.get(instance.__class__, None)
+        if handlers == None:
+            handlers = self.handlers[update.Update]
+        for handler in handlers:
+            handler(self, instance)
 
     def loop(self):
         while self.connected:
             for update in self.recv(1.0):
                 self.handle(update)
 
-    def connect(host, port=1111, timeout=10.0):
+    def connect_raw(self, host, port=1111):
         self.socket.connect((host, port))
-        self.send(update.Connect, version=update.version, extensions=update.extensions)
-        updates = self.recv(timeout)
-        if updates:
-            if type(updates[0]) is not update.Connect:
-                raise ConnectionFailed(update=update)
-            for update in updates:
-                self.handle(update)
-        else:
-            raise ConnectionFailed(message="Timeout")
+        self.socket.setblocking(0)
 
-    def send_raw(string):
+    def send_raw(self, string):
         totalsent = 0
-        length = len(string)
+        binary = string.encode('utf-8') + b'\0'
+        length = len(binary)
         while totalsent < length:
-            sent = self.sock.send(string[totalsent:])
-            if sent == 0:
-                raise RuntimeError('socket connection broken')
-            totalsent = totalsent + sent
+            try:
+                sent = self.socket.send(binary[totalsent:])
+                if sent == 0:
+                    raise RuntimeError('socket connection broken')
+                totalsent = totalsent + sent
+            except socket.error as e:
+                if e.errno != errno.EAGAIN:
+                    raise e
+                select.select([], [self.socket], [])
         
-    def recv_raw(timeout=0):
-        read, _write, _err = select.select([self.socket], [], [], timeout)
-        if read:
+    def recv_raw(self, timeout=0):
+        read = select.select([self.socket], [], [], timeout)
+        if read[0]:
             found_end = False
-            chunk = self.sock.recv(4096).decode('utf-8')
+            chunk = self.socket.recv(4096).decode('utf-8')
             while 0 < len(chunk):
                 self.chunks.append(chunk)
                 if '\0' in chunk:
                     found_end = True
                     break
-                chunk = self.sock.recv(4096).decode('utf-8')
+                select.select([self.socket], [], [])
+                chunk = self.socket.recv(4096).decode('utf-8')
             if found_end:
-                return stitch()
+                return self.stitch()
         return []
 
-    def stitch():
+    def stitch(self):
         parts = ''.join(self.chunks).split('\0')
         self.chunks = [parts.pop()]
         return parts
