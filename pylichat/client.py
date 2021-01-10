@@ -1,5 +1,6 @@
-import .symbol
-import .update
+from . import symbol
+from . import update
+from . import wire
 import time
 
 class Client:
@@ -21,6 +22,13 @@ class Client:
         args['id'] = self.next_id()
         instance = update.make_instance(symbol.li(type), **args)
         return self.send_raw(wire.to_string(instance.to_list()))
+
+    def r(self, string):
+        dat = wire.from_string(string)
+        if type(dat) == list and 0 < len(dat):
+            update = update.make_instance_plist(list[0], list[1:])
+            return self.handle(update)
+        return None
 
     def send_raw(string):
         return true

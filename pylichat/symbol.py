@@ -1,7 +1,7 @@
 package_table={}
 
 def find_package(name):
-    return package_table.get(name.upper(), None)
+    return package_table.get(name.lower(), None)
 
 def make_package(name, symbols=[]):
     name = name.lower()
@@ -28,12 +28,12 @@ def intern(name, package='lichat-protocol'):
     name = name.lower()
     package = package.lower()
     index = find_package(package)
-    if package == None:
+    if index == None:
         return None
     existing = index.get(name, None)
     if existing == None:
         existing = (package, name)
-        package[name] = existing
+        index[name] = existing
     return existing
 
 def unintern(symbol):

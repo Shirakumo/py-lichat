@@ -1,5 +1,5 @@
 from functools import singledispatch
-from .symbol import intern
+from .symbol import find_symbol
 import decimal
 
 float_ctx = decimal.Context()
@@ -18,7 +18,7 @@ def _(thing: list):
     '('+' '.join([to_string(x) for x in thing])+')'
 
 @to_string.register
-def _(thing: Decimal):
+def _(thing: int):
     return format(thing)
 
 @to_string.register
@@ -29,9 +29,9 @@ def _(thing: float):
 def _(thing: tuple):
     if tuple[0] == 'keyword':
         return ':'+tuple[1]
-    else if tuple[0] == 'lichat-protocol':
+    elif tuple[0] == 'lichat-protocol':
         return tuple[1]
-    else
+    else:
         return tuple[0]+':'+tuple[1]
 
 @to_string.register
@@ -42,7 +42,7 @@ def _(thing: bool):
         return 'NIL'
 
 @to_string.register
-def _(thing: NoneType):
+def _(thing: type(None)):
     return 'NIL'
 
 def consume_whitespace(string, i):
@@ -103,7 +103,4 @@ def read_symbol(string, i=0):
 
 def from_string(string, i=0):
     i = consume_whitespace(string, i)
-    read_list(string, i)
-    or read_string(string, i)
-    or read_number(string, i)
-    or read_symbol(string, i)
+    read_list(string, i) or read_string(string, i) or read_number(string, i) or read_symbol(string, i)
