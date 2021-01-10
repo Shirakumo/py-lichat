@@ -1,5 +1,5 @@
-from pylichat.client import Client
-from pylichat.update import *
+from client import Client
+from update import *
 import select
 import sys
 
@@ -45,12 +45,12 @@ def on_message(client, u):
 def on_join(client, u):
     if u['from'] == client.username:
         client.channel = u.channel
-    print('[{0}] ** {1} Joined'.format(u.channel, u['from']))
+        print('[{0}] ** {1} Joined'.format(u.channel, u['from']))
 
 def on_leave(client, u):
     if client.channel == u.channel:
         client.channel = next(iter(client.channels))
-    print('[{0}] ** {1} Left'.format(u.channel, u['from']))
+        print('[{0}] ** {1} Left'.format(u.channel, u['from']))
 
 def main(username=None, host="chat.tymoon.eu", port=1111):
     client = Client(username)

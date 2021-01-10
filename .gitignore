@@ -1,0 +1,4 @@
+build/
+dist/
+__pycache__
+pylichat.egg-info/
