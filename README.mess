@@ -1,2 +1,4 @@
 ## About PyLichat
 This is a library implementing the client-side protocol for "Lichat"(https://github.com/shirakumo/lichat-protocol).
+
+See "``__main__.py``"(link pylichat/__main__.py) for a simple example client usage.
