@@ -8,22 +8,18 @@ class Update:
     def __init__(self, **kwargs):
         self.id = kwargs.get('id', None)
         self.clock = kwargs.get('clock', None)
-        self['from'] = kwargs.get('from', None)
+        setattr(self, 'from', kwargs.get('from', None))
 
     def to_list(self):
-        plist = ()
+        plist = []
         for key in self.__dict__.keys():
             val = self.__dict__[key]
             if val != None:
                 plist.append(kw(key))
                 plist.append(val)
-        return [ self.symbol() ] + plist
-
-    def symbol(self):
-        name = self.__class__.__symbol__
+        return [ self.__symbol__ ] + plist
 
 def register_class(symbol, clazz):
-    clazz['__symbol__'] = symbol
     class_registry[symbol] = clazz
     return clazz
 
@@ -32,6 +28,8 @@ def find_class(symbol):
 
 def make_instance(symbol, **initargs):
     clazz = find_class(symbol)
+    if clazz == None:
+        return None
     return clazz(**initargs)
 
 def make_instance_plist(symbol, initargs):
@@ -49,6 +47,7 @@ def to_camelcase(name):
 def defclass(symbol, supers=(), fields={}):
     if type(symbol) is str:
         symbol = li(symbol)
+    __class__ = None
     
     def constructor(instance, **kwargs):
         super().__init__(**kwargs)
@@ -62,11 +61,12 @@ def defclass(symbol, supers=(), fields={}):
                 instance[field] = arg
                 
     name = to_camelcase(symbol[1])
-    clazz = type(name, supers+(Update, object), {
-        '__init__': constructor
+    __class__ = type(name, supers+(Update, object), {
+        '__init__': constructor,
+        '__symbol__': symbol
         })
-    globals()[name] = clazz
-    return clazz
+    globals()[name] = __class__
+    return register_class(symbol, __class__)
 
 defclass('ping')
 defclass('pong')
