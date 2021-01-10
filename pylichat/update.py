@@ -19,6 +19,12 @@ class Update:
                 plist.append(val)
         return [ self.__symbol__ ] + plist
 
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+    def __setitem__(self, key, value):
+        return setattr(self, key, value)
+
 def register_class(symbol, clazz):
     class_registry[symbol] = clazz
     return clazz
@@ -35,7 +41,7 @@ def make_instance(symbol, **initargs):
 def make_instance_plist(symbol, initargs):
     kwargs = {}
     for k,v in zip(*[iter(initargs)]*2):
-        if type(k) is tuple and k[0] == 'KEYWORD':
+        if type(k) is tuple and k[0] == 'keyword':
             kwargs[k[1].lower()] = v
         else:
             kwargs[k] = v
@@ -56,9 +62,9 @@ def defclass(symbol, supers=(), fields={}):
                 field = field.lower()
             arg = kwargs.get(field, None)
             if arg == None:
-                instance[field] = fields[field]
+                setattr(instance, field, fields[field])
             else:
-                instance[field] = arg
+                setattr(instance, field, arg)
                 
     name = to_camelcase(symbol[1])
     __class__ = type(name, supers+(Update, object), {
