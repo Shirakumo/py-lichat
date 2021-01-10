@@ -1,6 +1,7 @@
 from .symbol import kw,li
 
 version = '2.0'
+extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause']
 
 class_registry={}
 
@@ -96,6 +97,7 @@ defclass('pull', (ChannelUpdate, TargetUpdate))
 defclass('permissions', (ChannelUpdate,), {
     'permissions': [] })
 defclass('message', (ChannelUpdate, TextUpdate))
+defclass('edit', (ChannelUpdate, TextUpdate))
 defclass('users', (ChannelUpdate,), {
     'users': [] })
 defclass('channels', (), {
