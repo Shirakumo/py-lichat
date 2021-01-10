@@ -116,6 +116,7 @@ class Client:
                     self.send(update.Emotes, names=list(self.emotes.keys()))
             if u['from'] == self.username:
                 self.channels[u.channel] = Channel(u.channel)
+                self.send(update.Users, channel=u.channel)
                 if self.is_supported('shirakumo-channel-info'):
                     self.send(update.ChannelInfo, channel=u.channel)
                 if self.is_supported('shirakumo-backfill'):
