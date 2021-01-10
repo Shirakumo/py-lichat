@@ -1,5 +1,5 @@
 from functools import singledispatch
-from .symbol import find_symbol
+from .symbol import intern
 import decimal
 
 float_ctx = decimal.Context()
@@ -9,13 +9,18 @@ float_ctx.prec = 20
 def to_string(thing):
     raise ValueError("Don't know what to do with this.")
 
+def strchar(x):
+    if x == '"': return '\\"'
+    elif x == '\0': return ''
+    else: return x
+
 @to_string.register
 def _(thing: str):
-    '"'+''.join(['\\"' if x == '"' else x for x in str])+'"'
+    return '"'+''.join([strchar(x) for x in thing])+'"'
 
 @to_string.register
 def _(thing: list):
-    '('+' '.join([to_string(x) for x in thing])+')'
+    return '('+' '.join([to_string(x) for x in thing])+')'
 
 @to_string.register
 def _(thing: int):
@@ -27,12 +32,12 @@ def _(thing: float):
 
 @to_string.register
 def _(thing: tuple):
-    if tuple[0] == 'keyword':
-        return ':'+tuple[1]
-    elif tuple[0] == 'lichat-protocol':
-        return tuple[1]
+    if thing[0] == 'keyword':
+        return ':'+thing[1]
+    elif thing[0] == 'lichat-protocol':
+        return thing[1]
     else:
-        return tuple[0]+':'+tuple[1]
+        return thing[0]+':'+thing[1]
 
 @to_string.register
 def _(thing: bool):
@@ -45,62 +50,78 @@ def _(thing: bool):
 def _(thing: type(None)):
     return 'NIL'
 
-def consume_whitespace(string, i):
-    while string[i] in '\u0009\u000A\u000B\u000C\u000D\u0020':
+def consume_whitespace(string, i, end):
+    while i<end and string[i] in '\u0009\u000A\u000B\u000C\u000D\u0020':
         i = i+1
     return i
 
-def read_list(string, i=0):
-    if string[i] == '(':
+def read_list(string, i, end):
+    if i<end and string[i] == '(':
         i = i+1
         items = []
-        while string[i] != ')' and string[i] != '\0':
+        while i<end and string[i] != ')' and string[i] != '\0':
             (item, ni) = from_string(string, i)
-            i = consume_whitespace(string, ni)
             items.append(item)
+            i = consume_whitespace(string, ni, end)
+        if i<end and string[i] == ')':
+            i = i+1
         return (items, i)
 
-def read_string(string, i=0):
-    if string[i] == '"':
+def read_string(string, i, end):
+    if i<end and string[i] == '"':
         i = i+1
         result = ''
-        while string[i] != '"' and string[i] != '\0':
+        while i<end and string[i] != '"' and string[i] != '\0':
             if string[i] == '\\':
                 i = i+1
             result = result+string[i]
             i = i+1
+        if i<end and string[i] == '"':
+            i = i+1
         return (result, i)
 
-def read_number_part(string, i=0):
+def read_number_part(string, i, end):
     decimal = 0
-    while string[i] in '0123456789':
+    while i<end and string[i] in '0123456789':
         decimal = decimal*10 + (ord(string[i])-48)
         i = i+1
     return (decimal, i)
 
-def read_number(string, i=0):
-    if string[i] in '0123456789.':
-        (decimal, i) = read_number_part(string, i)
-        if string[i] == '.':
-            (fract, ni) = read_number_part(string, i)
-            num = decimal + fract / (10.0 ** (ni-i))
+def read_number(string, i, end):
+    if i<end and string[i] in '0123456789.':
+        (decimal, i) = read_number_part(string, i, end)
+        if i<end and string[i] == '.':
+            i = i+1
+            (fract, ni) = read_number_part(string, i, end)
+            num = decimal + float(fract) / (10.0 ** (ni-i))
             return (num, ni)
         return (decimal, i)
 
-def read_symbol(string, i=0):
+def read_token(string, i, end):
+    token = ''
+    while i<end and string[i] not in ': ".()':
+        if string[i] == '\\':
+            i = i+1
+        token = token+string[i]
+        i = i+1
+    return (token, i)
+
+def read_symbol(string, i, end):
     name = ''
-    (package, i) = read_token(string, i)
-    if string[i] == ':':
+    (package, i) = read_token(string, i, end)
+    if i<end and string[i] == ':':
+        i = i+1
         if package == '':
             package = 'keyword'
-        else:
-            (name, ni) = read_token(string, i)
-            i = ni
+        (name, i) = read_token(string, i, end)
+        return (intern(name, package), i)
     else:
-        name = package
-        package = 'lichat-protocol'
-    return (find_symbol(name, package), i)
+        return (intern(package), i)
 
-def from_string(string, i=0):
-    i = consume_whitespace(string, i)
-    read_list(string, i) or read_string(string, i) or read_number(string, i) or read_symbol(string, i)
+def from_string(string, i=0, end=-1):
+    if end < 0: end = len(string)
+    i = consume_whitespace(string, i, end)
+    return (read_list(string, i, end)
+            or read_string(string, i, end)
+            or read_number(string, i, end)
+            or read_symbol(string, i, end))

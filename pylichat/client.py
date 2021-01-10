@@ -24,7 +24,7 @@ class Client:
         return self.send_raw(wire.to_string(instance.to_list()))
 
     def r(self, string):
-        dat = wire.from_string(string)
+        (dat, i) = wire.from_string(string)
         if type(dat) == list and 0 < len(dat):
             update = update.make_instance_plist(list[0], list[1:])
             return self.handle(update)
