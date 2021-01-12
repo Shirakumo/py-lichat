@@ -1,5 +1,5 @@
-from client import Client
-from update import *
+from .client import Client
+from .update import *
 import select
 import sys
 
