@@ -1,6 +1,7 @@
 from . import symbol
 from . import update
 from . import wire
+import collections.abc
 import time
 import select
 import socket
@@ -18,6 +19,34 @@ class ConnectionFailed(Exception):
         if update and get(update, 'message'):
             message = get(update, 'message')
         super().__init__(message)
+
+class CaseInsensitiveDict(collections.abc.MutableMapping):
+    """A dict where key lookup ignores case (Unicode case-folding as per str.casefold())"""
+    __slots__ = 'data'
+
+    def __init__(self, d=dict()):
+        self.data = {k.casefold(): (k, v) for k, v in d.items()}
+
+    def __contains__(self, k):
+        return k.casefold() in self.data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, k):
+        return self.data[k.casefold()][1]
+
+    def __iter__(self):
+        return (v[0] for v in self.data.values())
+
+    def __setitem__(self, k, v):
+        self.data[k.casefold()] = (k, v)
+
+    def __delitem__(self, k):
+        del self.data[k.casefold()]
+
+    def __repr__(self):
+        return f"CaseInsensitiveDict({dict(self)})"
 
 class Channel:
     """Representation of a channel the client is in.
@@ -91,7 +120,7 @@ class Client:
         self.id = 0
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.chunks = []
-        self.channels = {}
+        self.channels = CaseInsensitiveDict()
         self.emotes = {}
 
         def connect(self, u):
