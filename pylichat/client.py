@@ -1,11 +1,13 @@
 from . import symbol
 from . import update
 from . import wire
+from pathlib import Path
 import collections.abc
 import time
 import select
 import socket
 import base64
+import mimetypes
 
 class ConnectionFailed(Exception):
     """Exception thrown when the connection attempt to the server fails for some reason.
@@ -86,6 +88,23 @@ class Emote:
         self.name = name
         self.content_type = content_type
         self.payload = payload
+
+    def from_file(filename):
+        with open(filename, 'rb') as file:
+            name = Path(filename).stem
+            (content_type,) = mimetypes.guess_type(file, False)
+            if content_type == None:
+                return None
+            return Emote(name, content_type, file.read())
+
+    def offload(self, directory):
+        with open(directory+'/'+self.filename(), 'wb') as file:
+            file.write(self.payload)
+
+    def filename(self):
+        if not mimetypes.inited:
+            mimetypes.init()
+        self.name+mimetypes.guess_extension(self.content_type, False)
     
 class Client:
     """A basic Lichat client using TCP sockets.
@@ -205,6 +224,18 @@ class Client:
     def is_supported(self, extension):
         """Returns true if the given extension is supported by client and server."""
         return extension in self.extensions
+
+    def offload_emotes(self, directory):
+        """Writes all emotes as files to the given directory."""
+        for emote in self.emotes:
+            emote.offload(directory)
+    
+    def reload_emotes(self, directory):
+        """Load all files from the directory into the emote database."""
+        for path in os.listdir(directory):
+            emote = Emote.from_file(directory+'/'+path)
+            if emote != None:
+                self.emotes[emote.name] = emote
 
     def connect(self, host, port=1111, timeout=10.0, username=None, password=None):
         """Attempts to establish a connection to the given server.
