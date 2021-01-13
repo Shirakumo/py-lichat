@@ -140,7 +140,7 @@ class Client:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.chunks = []
         self.channels = CaseInsensitiveDict()
-        self.emotes = {}
+        self.emotes = CaseInsensitiveDict()
 
         def connect(self, u):
             self.connected = True
