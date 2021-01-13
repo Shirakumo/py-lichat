@@ -1,7 +1,7 @@
 from .symbol import kw,li
 
 version = '2.0'
-extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause']
+extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip']
 
 class_registry={}
 
@@ -123,6 +123,16 @@ defclass('set-channel-info', (ChannelUpdate, TextUpdate), {
     'key': None })
 defclass('pause', (ChannelUpdate,), {
     'by': 0 })
+defclass('kill', (TargetUpdate,))
+defclass('destroy', (ChannelUpdate,))
+defclass('ban', (TargetUpdate,))
+defclass('unban', (TargetUpdate,))
+defclass('ip-ban', (), {
+    'ip': None,
+    'mask': None})
+defclass('ip-unban', (), {
+    'ip': None,
+    'mask': None})
 defclass('quiet', (ChannelUpdate, TargetUpdate))
 defclass('unquiet', (ChannelUpdate, TargetUpdate))
 defclass('failure', (TextUpdate,))
