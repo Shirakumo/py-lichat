@@ -166,6 +166,7 @@ class Client:
         self.chunks = []
         self.channels = CaseInsensitiveDict()
         self.emotes = CaseInsensitiveDict()
+        self.callbacks = {}
 
         def connect(self, u):
             self.connected = True
@@ -178,6 +179,7 @@ class Client:
             self.chunks = []
             self.extensions = []
             self.socket.close()
+            self.callbacks = {}
         
         def ping(self, u):
             self.send(update.Pong)
@@ -296,14 +298,37 @@ class Client:
         if self.connected:
             self.send(update.Disconnect)
 
+    def make_instance(self, type, **args):
+        """Creates an update instance with default values for from/clock/id.
+        
+        See update.make_instance
+        """
+        args['from'] = args.get('from', self.username)
+        args['clock'] = args.get('clock', Client.clock())
+        args['id'] = args.get('id', self.next_id())
+        return update.make_instance(type, **args)
+
     def send(self, type, **args):
         """Sends a new update for the given type and set of arguments.
 
-        See make_instance"""
-        args['from'] = self.username
-        args['clock'] = Client.clock()
-        args['id'] = self.next_id()
-        instance = update.make_instance(type, **args)
+        See make_instance
+        """
+        instance = self.make_instance(type, **args)
+        self.send_raw(wire.to_string(instance.to_list()))
+        return instance.id
+
+    def send_callback(self, callback, type, **args):
+        """Sends a new update for the given type and set of arguments.
+
+        Once a response for the update has been received, the supplied
+        callback function is called with thi initial update, and the
+        response update as arguments. The callback will be executed
+        /before/ any other handlers.
+
+        See make_instance
+        """
+        instance = self.make_instance(type, **args)
+        self.callbacks[instance.id] = (callback, instance)
         self.send_raw(wire.to_string(instance.to_list()))
         return instance.id
 
@@ -328,6 +353,13 @@ class Client:
 
         This delivers it to the various handler functions.
         """
+        id = instance.id
+        if isinstance(instance, update.UpdateFailure):
+            id = instance['update-id']
+        (callback, sent) = self.callbacks.pop(id, (None, None))
+        if callback != None:
+            callback(sent, instance)
+        
         for handler in self.handlers.get(instance.__class__, []):
             handler(self, instance)
         for handler in self.handlers[update.Update]:
