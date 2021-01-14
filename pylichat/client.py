@@ -18,8 +18,8 @@ class ConnectionFailed(Exception):
     """
     def __init__(self, update=None, message='Connection failed.'):
         self.update = update
-        if update and get(update, 'message'):
-            message = get(update, 'message')
+        if update and hasattr(update, 'text'):
+            message = update.text
         super().__init__(message)
 
 class CaseInsensitiveDict(collections.abc.MutableMapping):
@@ -285,7 +285,7 @@ class Client:
         updates = self.recv(timeout)
         if updates:
             if type(updates[0]) is not update.Connect:
-                raise ConnectionFailed(update=update)
+                raise ConnectionFailed(update=updates[0])
             for instance in updates:
                 self.handle(instance)
         else:
