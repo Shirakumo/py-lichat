@@ -50,6 +50,31 @@ class CaseInsensitiveDict(collections.abc.MutableMapping):
     def __repr__(self):
         return f"CaseInsensitiveDict({dict(self)})"
 
+class CaseInsensitiveSet(collections.abc.MutableSet):
+    """A set where lookup ignores case (Unicode case-folding as per str.casefold())"""
+    __slots__ = 'data'
+
+    def __init__(self, s=set()):
+        self.data = {i.casefold(): i for i in s}
+
+    def __contains__(self, i):
+        return i.casefold() in self.data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __iter__(self):
+        return (v for v in self.data.values())
+
+    def add(self, i):
+        self.data[i.casefold()] = i
+
+    def discard(self, i):
+        self.data.pop(i.casefold(), None)
+
+    def __repr__(self):
+        return f"CaseInsensitiveSet({set(self)})"
+
 class Channel:
     """Representation of a channel the client is in.
 
@@ -62,7 +87,7 @@ class Channel:
     """
     def __init__(self, name):
         self.name = name
-        self.users = set()
+        self.users = CaseInsensitiveSet()
         self.info = {}
 
     def join(self, name):
