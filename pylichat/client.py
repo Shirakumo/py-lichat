@@ -317,8 +317,10 @@ class Client:
 
         This delivers it to the various handler functions.
         """
-        id = instance.id
-        if isinstance(instance, update.UpdateFailure):
+        id = None
+        if instance['from'] == self.username:
+            id = instance.id
+        elif isinstance(instance, update.UpdateFailure):
             id = instance['update-id']
         (callback, sent) = self.callbacks.pop(id, (None, None))
         if callback != None:
