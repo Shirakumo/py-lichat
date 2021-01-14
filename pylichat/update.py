@@ -1,4 +1,5 @@
 from .symbol import kw,li
+import textwrap
 
 version = '2.0'
 extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip']
@@ -25,6 +26,16 @@ class Update:
     
     def __setitem__(self, key, value):
         return setattr(self, key, value)
+
+    def __repr__(self):
+        return (f"{self.__class__.__qualname__}("
+                + ", ".join(f"{k}={self[k]!r}" for k in self.__dict__)
+                + ")")
+
+    def __str__(self):
+        return (f"{self.__class__.__qualname__}("
+                + ", ".join(f"{k}={textwrap.shorten(str(self[k]), width=74)}" for k in self.__dict__)
+                + ")")
 
 def register_class(symbol, clazz):
     class_registry[symbol] = clazz
