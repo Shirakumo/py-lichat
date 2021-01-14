@@ -16,6 +16,8 @@ class ConnectionFailed(Exception):
     the connection failure, if the server was reachable, but
     connection failed for another reason.
     """
+    __slots__ = 'update'
+
     def __init__(self, update=None, message='Connection failed.'):
         self.update = update
         if update and hasattr(update, 'text'):
@@ -32,6 +34,8 @@ class Channel:
     You may access the channel information by accessing the
     channel object like a dictionary.
     """
+    __slots__ = 'name', 'users', 'info'
+
     def __init__(self, name):
         self.name = name
         self.users = CaseInsensitiveSet()
@@ -56,6 +60,8 @@ class Emote:
     An emote has a name, a content_type (as a mime-type string)
     and a binary payload that describes the actual image data
     """
+    __slots__ = 'name', 'content_type', 'payload'
+
     def __init__(self, name, content_type, payload):
         self.name = name
         self.content_type = content_type
@@ -101,6 +107,17 @@ class Client:
     connection. Connection has to be manually
     initiated with the connect function.
     """
+    __slots__ = ('username', 'password',
+                 'servername',
+                 'connected',
+                 'extensions',
+                 'id',
+                 'socket',
+                 'chunks',
+                 'channels',
+                 'emotes',
+                 'callbacks',
+                 'handlers')
     
     def __init__(self, username=None, password=None):
         self.username = username

@@ -52,9 +52,12 @@ def on_leave(client, u):
         client.channel = next(iter(client.channels))
         print('[{0}] ** {1} Left'.format(u.channel, u['from']))
 
+class MyClient(Client):
+    __slots__ = 'channel'
+
 def main(username=None, host="chat.tymoon.eu", port=1111):
-    client = Client(username)
-    setattr(client, 'channel', None)
+    client = MyClient(username)
+    client.channel = None
     client.add_handler(Update, on_misc)
     client.add_handler(Message, on_message)
     client.add_handler(Join, on_join)
