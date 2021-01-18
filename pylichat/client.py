@@ -117,7 +117,8 @@ class Client:
                  'channels',
                  'emotes',
                  'callbacks',
-                 'handlers')
+                 'handlers',
+                 'in_flight')
     
     def __init__(self, username=None, password=None):
         self.username = username
@@ -131,6 +132,7 @@ class Client:
         self.channels = CaseInsensitiveDict()
         self.emotes = CaseInsensitiveDict()
         self.callbacks = {}
+        self.in_flight = {}
 
         def connect(self, u):
             self.connected = True
@@ -278,6 +280,7 @@ class Client:
         See make_instance
         """
         instance = self.make_instance(type, **args)
+        self.in_flight[instance.id] = instance
         self.send_raw(wire.to_string(instance.to_list()))
         return instance.id
 
@@ -292,6 +295,7 @@ class Client:
         See make_instance
         """
         instance = self.make_instance(type, **args)
+        self.in_flight[instance.id] = instance
         self.callbacks[instance.id] = (callback, instance)
         self.send_raw(wire.to_string(instance.to_list()))
         return instance.id
@@ -330,6 +334,28 @@ class Client:
             handler(self, instance)
         for handler in self.handlers[update.Update]:
             handler(self, instance)
+        
+        self.in_flight.pop(id, None)
+        for id in self.in_flight:
+            if 600 < Client.clock() - self.in_flight[id].clock:
+                del self.in_flight[id]
+
+    def origin(self, instance):
+        """
+        Returns the update that prompted the response update, if any.
+        
+        This can only be accessed while the response update is
+        being handled, as the initial update reference is deleted
+        after the response has been fully handled.
+        """
+        id = instance.id
+        if isinstance(instance, update.UpdateFailure):
+            id = instance['update-id']
+        return self.in_flight.get(id, None)
+
+    def is_in_flight(self, id):
+        """Returns true if the update for the given ID is still in flight."""
+        return id in self.in_flight
 
     def loop(self):
         """Perform a basic connection loop of just receiving and handling updates."""
