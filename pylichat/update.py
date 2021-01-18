@@ -21,6 +21,12 @@ class Update:
                 plist.append(val)
         return [ self.__symbol__ ] + plist
 
+    def get(self, key, default=None):
+        if hasattr(self, key):
+            return getattr(self, key)
+        else:
+            return default
+
     def __getitem__(self, key):
         return getattr(self, key)
     
