@@ -288,9 +288,9 @@ class Client:
         """Sends a new update for the given type and set of arguments.
 
         Once a response for the update has been received, the supplied
-        callback function is called with thi initial update, and the
-        response update as arguments. The callback will be executed
-        /before/ any other handlers.
+        callback function is called with the client, the initial update,
+        and the response update as arguments. The callback will be
+        executed /before/ any other handlers.
 
         See make_instance
         """
@@ -328,7 +328,7 @@ class Client:
             id = instance['update-id']
         (callback, sent) = self.callbacks.pop(id, (None, None))
         if callback != None:
-            callback(sent, instance)
+            callback(self, sent, instance)
         
         for handler in self.handlers.get(instance.__class__, []):
             handler(self, instance)
