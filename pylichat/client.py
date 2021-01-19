@@ -336,7 +336,7 @@ class Client:
             handler(self, instance)
         
         self.in_flight.pop(id, None)
-        for id in self.in_flight:
+        for id in list(self.in_flight):
             if 600 < (Client.clock() - self.in_flight[id].clock):
                 del self.in_flight[id]
 
