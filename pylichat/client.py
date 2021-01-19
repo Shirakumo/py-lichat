@@ -207,7 +207,7 @@ class Client:
 
     def clock():
         """Returns the current time in universal-time"""
-        int(time.time()) + 2208988800
+        return int(time.time()) + 2208988800
 
     def next_id(self):
         """Returns a new unique ID."""
@@ -337,7 +337,7 @@ class Client:
         
         self.in_flight.pop(id, None)
         for id in self.in_flight:
-            if 600 < Client.clock() - self.in_flight[id].clock:
+            if 600 < (Client.clock() - self.in_flight[id].clock):
                 del self.in_flight[id]
 
     def origin(self, instance):
