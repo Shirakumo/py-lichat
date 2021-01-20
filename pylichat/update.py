@@ -117,6 +117,10 @@ defclass('kick', (ChannelUpdate, TargetUpdate))
 defclass('pull', (ChannelUpdate, TargetUpdate))
 defclass('permissions', (ChannelUpdate,), {
     'permissions': [] })
+defclass('grant', (ChannelUpdate, TargetUpdate), {
+    'update': None})
+defclass('deny', (ChannelUpdate, TargetUpdate), {
+    'update': None})
 defclass('message', (ChannelUpdate, TextUpdate))
 defclass('edit', (ChannelUpdate, TextUpdate))
 defclass('users', (ChannelUpdate,), {
