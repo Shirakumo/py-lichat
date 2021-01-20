@@ -9,6 +9,7 @@ import socket
 import ssl
 import base64
 import mimetypes
+import os
 
 class ConnectionFailed(Exception):
     """Exception thrown when the connection attempt to the server fails for some reason.
@@ -69,11 +70,11 @@ class Emote:
         self.payload = payload
 
     def from_file(filename):
+        (content_type,_) = mimetypes.guess_type(filename, False)
+        if content_type == None:
+            return None
         with open(filename, 'rb') as file:
             name = Path(filename).stem
-            (content_type,) = mimetypes.guess_type(file, False)
-            if content_type == None:
-                return None
             return Emote(name, content_type, file.read())
 
     def offload(self, directory):
@@ -83,7 +84,7 @@ class Emote:
     def filename(self):
         if not mimetypes.inited:
             mimetypes.init()
-        self.name+mimetypes.guess_extension(self.content_type, False)
+        return self.name+mimetypes.guess_extension(self.content_type, False)
     
 class Client:
     """A basic Lichat client using TCP sockets.
