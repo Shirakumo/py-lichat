@@ -6,6 +6,7 @@ from pathlib import Path
 import time
 import select
 import socket
+import ssl
 import base64
 import mimetypes
 
@@ -230,7 +231,7 @@ class Client:
             if emote != None:
                 self.emotes[emote.name] = emote
 
-    def connect(self, host, port=1111, timeout=10.0, username=None, password=None):
+    def connect(self, host, port=None, timeout=10.0, username=None, password=None, ssl=False, ssl_options={}):
         """Attempts to establish a connection to the given server.
 
         You may also pass in the username and password,
@@ -248,7 +249,7 @@ class Client:
         """
         if username != None: self.username = username
         if password != None: self.password = password
-        self.connect_raw(host, port)
+        self.connect_raw(host=host, port=port, ssl=ssl, ssl_options=ssl_options)
         self.send(update.Connect, password=password, version=update.version, extensions=update.extensions)
         updates = self.recv(timeout)
         if updates:
@@ -363,7 +364,13 @@ class Client:
             for update in self.recv(1.0):
                 self.handle(update)
 
-    def connect_raw(self, host, port=1111):
+    def connect_raw(self, host, port=None, ssl=False, ssl_options={}):
+        if ssl:
+            if port == None: port = 1112
+            context = ssl.create_default_context(**ssl_options)
+            wrapped = ssl.wrap_socket(self.socket, server_hostname=host)
+            self.socket = wrapped
+        if port == None: port = 1111
         self.socket.connect((host, port))
         self.socket.setblocking(0)
 
