@@ -2,7 +2,7 @@ from .symbol import kw,li
 import textwrap
 
 version = '2.0'
-extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip']
+extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip', 'shirakumo-channel-trees']
 
 class_registry={}
 
@@ -118,7 +118,7 @@ defclass('message', (ChannelUpdate, TextUpdate))
 defclass('edit', (ChannelUpdate, TextUpdate))
 defclass('users', (ChannelUpdate,), {
     'users': [] })
-defclass('channels', (), {
+defclass('channels', (ChannelUpdate,), {
     'channels': []})
 defclass('user-info', (TargetUpdate,), {
     'registered': None,
@@ -180,3 +180,4 @@ defclass('no-such-channel-info', (UpdateFailure,), {
     'key': None })
 defclass('malformed-channel-info', (UpdateFailure,))
 defclass('clock-skewed', (UpdateFailure,))
+defclass('no-such-parent-channel', (UpdateFailure,))
