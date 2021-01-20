@@ -21,6 +21,9 @@ class Update:
                 plist.append(val)
         return [ self.__symbol__ ] + plist
 
+    def unix_clock(self):
+        return self.clock - 2208988800
+
     def get(self, key, default=None):
         if hasattr(self, key):
             return getattr(self, key)
