@@ -10,6 +10,7 @@ import ssl
 import base64
 import mimetypes
 import os
+import errno
 
 class ConnectionFailed(Exception):
     """Exception thrown when the connection attempt to the server fails for some reason.
