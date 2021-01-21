@@ -251,7 +251,7 @@ class Client:
         """
         if username != None: self.username = username
         if password != None: self.password = password
-        self.connect_raw(host=host, port=port, ssl=ssl, ssl_options=ssl_options)
+        self.connect_raw(host=host, port=port, use_ssl=ssl, ssl_options=ssl_options)
         self.send(update.Connect, password=password, version=update.version, extensions=update.extensions)
         updates = self.recv(timeout)
         if updates:
@@ -366,13 +366,15 @@ class Client:
             for update in self.recv(1.0):
                 self.handle(update)
 
-    def connect_raw(self, host, port=None, ssl=False, ssl_options={}):
-        if ssl:
+    def connect_raw(self, host, port=None, use_ssl=False, ssl_options={}):
+        if use_ssl:
             if port == None: port = 1112
             context = ssl.create_default_context(**ssl_options)
-            wrapped = ssl.wrap_socket(self.socket, server_hostname=host)
+            wrapped = context.wrap_socket(self.socket, server_hostname=host)
             self.socket = wrapped
-        if port == None: port = 1111
+        if port == None:
+            if use_ssl: port = 1112
+            else: port = 1111
         self.socket.connect((host, port))
         self.socket.setblocking(0)
 
