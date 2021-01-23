@@ -121,6 +121,8 @@ defclass('grant', (ChannelUpdate, TargetUpdate), {
     'update': None})
 defclass('deny', (ChannelUpdate, TargetUpdate), {
     'update': None})
+defclass('capabilities', (ChannelUpdate,), {
+    'updates': None})
 defclass('message', (ChannelUpdate, TextUpdate))
 defclass('edit', (ChannelUpdate, TextUpdate))
 defclass('users', (ChannelUpdate,), {
@@ -130,6 +132,9 @@ defclass('channels', (ChannelUpdate,), {
 defclass('user-info', (TargetUpdate,), {
     'registered': None,
     'connections': None })
+defclass('server-info', (TargetUpdate,), {
+    'attributes': None,
+    'connections': None})
 defclass('backfill', (ChannelUpdate,))
 defclass('data', (ChannelUpdate,), {
     'content-type': None,
