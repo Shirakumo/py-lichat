@@ -269,10 +269,12 @@ class Client:
         else:
             raise ConnectionFailed(message="Timeout")
 
-    def disconnect(self):
+    def disconnect(self, timeout=3):
         """Initiates a disconnect handshake if the client is connected."""
         if self.connected:
             self.send(update.Disconnect)
+            for instance in self.recv(timeout):
+                self.handle(instance)
 
     def make_instance(self, type, **args):
         """Creates an update instance with default values for from/clock/id.
