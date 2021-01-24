@@ -180,6 +180,12 @@ class Client:
             channel = self.channels.get(u.channel, None)
             if channel != None:
                 channel[u.key] = u.value
+
+        def users(self, u):
+            channel = self.channels.get(u.channel, None)
+            if channel != None:
+                for user in u.users:
+                    channel.join(user)
             
         self.handlers = {
             update.Update: [],
@@ -189,7 +195,8 @@ class Client:
             update.Join: [join],
             update.Leave: [leave],
             update.Emote: [emote],
-            update.SetChannelInfo: [channelinfo]
+            update.SetChannelInfo: [channelinfo],
+            update.Users: [users]
         }
 
     def add_handler(self, update, fun):
