@@ -276,6 +276,7 @@ class Client:
             self.send(update.Disconnect)
             for instance in self.recv(timeout):
                 self.handle(instance)
+            self.socket.close()
 
     def make_instance(self, type, **args):
         """Creates an update instance with default values for from/clock/id.
@@ -407,7 +408,7 @@ class Client:
         
     def recv_raw(self, timeout=0):
         try:
-            read = select.select([self.socket], [], [], timeout)
+            read = select.select([self.socket], [], [self.socket], timeout)
             if read[0]:
                 found_end = False
                 chunk = self.socket.recv(4096).decode('utf-8')
@@ -420,6 +421,8 @@ class Client:
                     chunk = self.socket.recv(4096).decode('utf-8')
                 if found_end:
                     return self.stitch()
+            if read[2]:
+                return [update.make_instance(update.Disconnect)]
             return []
         except:
             return [update.make_instance(update.Disconnect)]
