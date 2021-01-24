@@ -122,7 +122,7 @@ defclass('grant', (ChannelUpdate, TargetUpdate), {
 defclass('deny', (ChannelUpdate, TargetUpdate), {
     'update': None})
 defclass('capabilities', (ChannelUpdate,), {
-    'updates': None})
+    'permitted': None})
 defclass('message', (ChannelUpdate, TextUpdate))
 defclass('edit', (ChannelUpdate, TextUpdate))
 defclass('users', (ChannelUpdate,), {
