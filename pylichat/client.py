@@ -161,10 +161,11 @@ class Client:
             if u['from'] == self.username:
                 self.channels[u.channel] = Channel(u.channel)
                 self.send(update.Users, channel=u.channel)
-                if self.is_supported('shirakumo-channel-info'):
-                    self.send(update.ChannelInfo, channel=u.channel)
-                if self.is_supported('shirakumo-backfill'):
-                    self.send(update.Backfill, channel=u.channel)
+                if not u.channel.startswith('@'): ## Don't request in private channels. Perms are denied anyway.
+                    if self.is_supported('shirakumo-channel-info'):
+                        self.send(update.ChannelInfo, channel=u.channel)
+                    if self.is_supported('shirakumo-backfill'):
+                        self.send(update.Backfill, channel=u.channel)
             self.channels[u.channel].join(u['from'])
 
         def leave(self, u):
