@@ -393,28 +393,33 @@ class Client:
             try:
                 sent = self.socket.send(binary[totalsent:])
                 if sent == 0:
-                    raise RuntimeError('socket connection broken')
+                    self.handle(update.make_instance(update.Disconnect))
+                    return
                 totalsent = totalsent + sent
             except socket.error as e:
                 if e.errno != errno.EAGAIN:
-                    raise e
+                    self.handle(update.make_instance(update.Disconnect))
+                    return
                 select.select([], [self.socket], [])
         
     def recv_raw(self, timeout=0):
-        read = select.select([self.socket], [], [], timeout)
-        if read[0]:
-            found_end = False
-            chunk = self.socket.recv(4096).decode('utf-8')
-            while 0 < len(chunk):
-                self.chunks.append(chunk)
-                if '\0' in chunk:
-                    found_end = True
-                    break
-                select.select([self.socket], [], [])
+        try:
+            read = select.select([self.socket], [], [], timeout)
+            if read[0]:
+                found_end = False
                 chunk = self.socket.recv(4096).decode('utf-8')
-            if found_end:
-                return self.stitch()
-        return []
+                while 0 < len(chunk):
+                    self.chunks.append(chunk)
+                    if '\0' in chunk:
+                        found_end = True
+                        break
+                    select.select([self.socket], [], [])
+                    chunk = self.socket.recv(4096).decode('utf-8')
+                if found_end:
+                    return self.stitch()
+            return []
+        except:
+            return [update.make_instance(update.Disconnect)]
 
     def stitch(self):
         parts = ''.join(self.chunks).split('\0')
