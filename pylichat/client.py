@@ -130,7 +130,6 @@ class Client:
         self.connected = False
         self.extensions = []
         self.id = 0
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.chunks = []
         self.channels = CaseInsensitiveDict()
         self.emotes = CaseInsensitiveDict()
@@ -148,6 +147,7 @@ class Client:
             self.chunks = []
             self.extensions = []
             self.socket.close()
+            self.socket = None
             self.callbacks = {}
         
         def ping(self, u):
@@ -259,17 +259,21 @@ class Client:
         """
         if username != None: self.username = username
         if password != None: self.password = password
+        if self.connected:
+            raise ValueError(message="Already connected!")
         self.connect_raw(host=host, port=port, use_ssl=ssl, ssl_options=ssl_options)
         self.send(update.Connect, password=self.password, version=update.version, extensions=update.extensions)
         updates = self.recv(timeout)
         if updates:
             if type(updates[0]) is not update.Connect:
                 self.socket.close()
+                self.socket = None
                 raise ConnectionFailed(update=updates[0])
             for instance in updates:
                 self.handle(instance)
         else:
             self.socket.close()
+            self.socket = None
             raise ConnectionFailed(message="Timeout")
 
     def disconnect(self, timeout=3):
@@ -278,7 +282,10 @@ class Client:
             self.send(update.Disconnect)
             for instance in self.recv(timeout):
                 self.handle(instance)
-            self.socket.close()
+            if self.socket != None:
+                self.socket.close()
+            self.socket = None
+            self.connected = False
 
     def make_instance(self, type, **args):
         """Creates an update instance with default values for from/clock/id.
@@ -380,6 +387,7 @@ class Client:
                 self.handle(update)
 
     def connect_raw(self, host, port=None, use_ssl=False, ssl_options={}):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if use_ssl:
             if port == None: port = 1112
             context = ssl.create_default_context(**ssl_options)
