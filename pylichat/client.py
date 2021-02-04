@@ -259,6 +259,7 @@ class Client:
         """
         if username != None: self.username = username
         if password != None: self.password = password
+        if self.password == '': self.password = None
         if self.connected:
             raise ValueError(message="Already connected!")
         self.connect_raw(host=host, port=port, use_ssl=ssl, ssl_options=ssl_options)
