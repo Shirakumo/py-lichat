@@ -260,7 +260,7 @@ class Client:
         if username != None: self.username = username
         if password != None: self.password = password
         self.connect_raw(host=host, port=port, use_ssl=ssl, ssl_options=ssl_options)
-        self.send(update.Connect, password=password, version=update.version, extensions=update.extensions)
+        self.send(update.Connect, password=self.password, version=update.version, extensions=update.extensions)
         updates = self.recv(timeout)
         if updates:
             if type(updates[0]) is not update.Connect:
