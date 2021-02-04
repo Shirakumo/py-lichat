@@ -264,10 +264,12 @@ class Client:
         updates = self.recv(timeout)
         if updates:
             if type(updates[0]) is not update.Connect:
+                self.socket.close()
                 raise ConnectionFailed(update=updates[0])
             for instance in updates:
                 self.handle(instance)
         else:
+            self.socket.close()
             raise ConnectionFailed(message="Timeout")
 
     def disconnect(self, timeout=3):
