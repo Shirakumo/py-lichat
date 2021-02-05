@@ -180,7 +180,7 @@ class Client:
         def channelinfo(self, u):
             channel = self.channels.get(u.channel, None)
             if channel != None:
-                channel[u.key] = u.value
+                channel[u.key] = u.text
 
         def users(self, u):
             channel = self.channels.get(u.channel, None)
