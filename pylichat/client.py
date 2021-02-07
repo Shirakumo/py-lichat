@@ -418,25 +418,31 @@ class Client:
                 select.select([], [self.socket], [])
         
     def recv_raw(self, timeout=0):
+        updates = []
+        errored = False
         try:
-            read = select.select([self.socket], [], [self.socket], timeout)
-            if read[0]:
+            ready = select.select([self.socket], [], [self.socket], timeout)
+            if ready[2]: errored = True
+            if ready[0]:
                 found_end = False
                 chunk = self.socket.recv(4096).decode('utf-8')
+                if len(chunk) == 0:
+                    errored = True
                 while 0 < len(chunk):
                     self.chunks.append(chunk)
                     if '\0' in chunk:
                         found_end = True
                         break
-                    select.select([self.socket], [], [])
-                    chunk = self.socket.recv(4096).decode('utf-8')
+                    ready = select.select([self.socket], [], [self.socket])
+                    if ready[2]: errored = True
+                    if ready[0]: chunk = self.socket.recv(4096).decode('utf-8')
+                    elif errored: break
                 if found_end:
-                    return self.stitch()
-            if read[2]:
-                return [update.make_instance(update.Disconnect)]
-            return []
+                    updates += self.stitch()
         except:
-            return [update.make_instance(update.Disconnect)]
+            errored = True
+        if errored: updates += [f"(disconnect :from \"{self.servername}\" :id 0)"]
+        return updates
 
     def stitch(self):
         parts = ''.join(self.chunks).split('\0')
