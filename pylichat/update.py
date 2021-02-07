@@ -131,7 +131,8 @@ defclass('channels', (ChannelUpdate,), {
     'channels': []})
 defclass('user-info', (TargetUpdate,), {
     'registered': None,
-    'connections': None })
+    'connections': None,
+    'info': None })
 defclass('server-info', (TargetUpdate,), {
     'attributes': None,
     'connections': None})
@@ -149,6 +150,8 @@ defclass('emote', (), {
 defclass('channel-info', (ChannelUpdate,), {
     'keys': True })
 defclass('set-channel-info', (ChannelUpdate, TextUpdate), {
+    'key': None })
+defclass('set-user-info', (TextUpdate,), {
     'key': None })
 defclass('pause', (ChannelUpdate,), {
     'by': 0 })
@@ -191,5 +194,8 @@ defclass('bad-content-type', (UpdateFailure,), {
 defclass('no-such-channel-info', (UpdateFailure,), {
     'key': None })
 defclass('malformed-channel-info', (UpdateFailure,))
+defclass('no-such-user-info', (UpdateFailure,), {
+    'key': None })
+defclass('malformed-user-info', (UpdateFailure,))
 defclass('clock-skewed', (UpdateFailure,))
 defclass('no-such-parent-channel', (UpdateFailure,))
