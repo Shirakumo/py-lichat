@@ -11,6 +11,7 @@ def to_string(thing):
 
 def strchar(x):
     if x == '"': return '\\"'
+    elif x == '\\': return '\\\\'
     elif x == '\0': return ''
     else: return x
 
