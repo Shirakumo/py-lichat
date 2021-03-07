@@ -2,7 +2,7 @@ from .symbol import kw,li
 import textwrap
 
 version = '2.0'
-extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip', 'shirakumo-channel-trees']
+extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip', 'shirakumo-channel-trees', 'shirakumo-bridge']
 
 class_registry={}
 
@@ -105,7 +105,8 @@ defclass('connect', (), {
 defclass('disconnect')
 defclass('register')
 defclass('channel-update', (), {
-    'channel': None })
+    'channel': None,
+    'bridge': None })
 defclass('target-update', (), {
     'target': None })
 defclass('text-update', (), {
