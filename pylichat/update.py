@@ -2,7 +2,7 @@ from .symbol import kw,li
 import textwrap
 
 version = '2.0'
-extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip', 'shirakumo-channel-trees', 'shirakumo-bridge']
+extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip', 'shirakumo-channel-trees', 'shirakumo-bridge', 'shirakumo-reactions', 'shirakumo-block']
 
 class_registry={}
 
@@ -168,6 +168,13 @@ defclass('ip-unban', (), {
     'mask': None})
 defclass('quiet', (ChannelUpdate, TargetUpdate))
 defclass('unquiet', (ChannelUpdate, TargetUpdate))
+defclass('react', (ChannelUpdate,), {
+    'target': None,
+    'update-id': None,
+    'emote': None})
+defclass('block', (TargetUpdate,))
+defclass('unblock', (TargetUpdate,))
+
 defclass('failure', (TextUpdate,))
 defclass('malformed-update', (Failure,))
 defclass('update-too-long', (Failure,))
