@@ -76,14 +76,16 @@ def defclass(symbol, supers=(), fields={}):
     if type(symbol) is str:
         symbol = li(symbol)
     __class__ = None
+
+    nil_symbol = li('nil')
     
     def constructor(instance, **kwargs):
         super().__init__(**kwargs)
         for field in fields:
             if type(field) is str:
                 field = field.lower()
-            arg = kwargs.get(field, None)
-            if arg == None:
+            arg = kwargs.get(field)
+            if arg is None or arg is nil_symbol:
                 setattr(instance, field, fields[field])
             else:
                 setattr(instance, field, arg)
