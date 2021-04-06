@@ -1,12 +1,13 @@
 from .symbol import kw,li
 import textwrap
+import collections.abc
 
 version = '2.0'
 extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip', 'shirakumo-channel-trees', 'shirakumo-bridge', 'shirakumo-reactions', 'shirakumo-block']
 
 class_registry={}
 
-class Update:
+class Update(collections.abc.MutableMapping):
     def __init__(self, **kwargs):
         self.id = kwargs.get('id', None)
         self.clock = kwargs.get('clock', None)
@@ -24,17 +25,23 @@ class Update:
     def unix_clock(self):
         return self.clock - 2208988800
 
-    def get(self, key, default=None):
-        if hasattr(self, key):
-            return getattr(self, key)
-        else:
-            return default
-
     def __getitem__(self, key):
-        return getattr(self, key)
-    
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            raise KeyError(f"{key!r}")
+
     def __setitem__(self, key, value):
         return setattr(self, key, value)
+
+    def __delitem__(self, key):
+        return delattr(self, key)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __iter__(self):
+        return iter(self.__dict__)
 
     def __repr__(self):
         return (f"{self.__class__.__qualname__}("
