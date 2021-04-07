@@ -6,7 +6,7 @@ README = (HERE / "README.mess").read_text()
 
 setup(
     name='pylichat',
-    version='1.2',
+    version='1.3',
     description='A library for the Lichat protocol',
     long_description=README,
     license='zlib',
