@@ -146,8 +146,9 @@ class Client:
             self.channels.clear()
             self.chunks = []
             self.extensions = []
-            self.socket.close()
-            self.socket = None
+            if self.socket is not None:
+                self.socket.close()
+                self.socket = None
             self.callbacks = {}
         
         def ping(self, u):
@@ -401,6 +402,9 @@ class Client:
         self.socket.setblocking(0)
 
     def send_raw(self, string):
+        if self.socket is None:
+            self.handle(update.make_instance(update.Disconnect))
+            return
         totalsent = 0
         binary = string.encode('utf-8') + b'\0'
         length = len(binary)
