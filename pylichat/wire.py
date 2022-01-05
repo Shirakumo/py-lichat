@@ -51,8 +51,8 @@ def _(thing: float):
             return f"{left}.{right}"
         else:
             return left
-    # Fallback
-    return s
+
+    raise ValueError(f"Can't send this float {s!r}")
 
 @to_string.register
 def _(thing: tuple):
