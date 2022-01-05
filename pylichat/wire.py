@@ -1,9 +1,6 @@
 from functools import singledispatch
 from .symbol import intern
-import decimal
-
-float_ctx = decimal.Context()
-float_ctx.prec = 20
+import re
 
 @singledispatch
 def to_string(thing):
@@ -27,9 +24,35 @@ def _(thing: list):
 def _(thing: int):
     return format(thing)
 
+float_rx = re.compile(r"^(\d+)(?:.(\d+))?(?:e([+-]?\d+))?$", re.I)
+
 @to_string.register
 def _(thing: float):
-    return format(float_ctx.create_decimal(repr(thing)), 'f')
+    s = repr(thing)
+    # Render exponents as digits instead; lichat spec does not allow for exponents.
+    match = float_rx.match(s)
+    if match:
+        left, right, exp = match.groups()
+        if exp is None:
+            return s
+        exp = int(exp)
+
+        while exp > 0:
+            left = left + (right[:1] or '0')
+            right = right[1:]
+            exp = exp - 1
+
+        while exp < 0:
+            right = (left[-1:] or '0') + right
+            left = left[:-1] or '0'
+            exp = exp + 1
+
+        if right:
+            return f"{left}.{right}"
+        else:
+            return left
+    # Fallback
+    return s
 
 @to_string.register
 def _(thing: tuple):
