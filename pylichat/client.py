@@ -36,6 +36,10 @@ class ConnectionLost(Exception):
     def __init__(self, message='Connection lost.'):
         super().__init__(message)
 
+class SwallowUpdate(BaseException):
+    """Stop propagation of this update through further handlers."""
+    pass
+
 class Channel:
     """Representation of a channel the client is in.
 
@@ -157,18 +161,23 @@ class Client:
             self.send(update.Pong)
 
         def join(self, u):
+            def swallow_errors(self, sent, u):
+                if isinstance(u, update.InsufficientPermissions):
+                    raise SwallowUpdate()
+
             if self.servername == None:
                 self.servername = u.channel
                 if self.is_supported('shirakumo-emotes'):
-                    self.send(update.Emotes, names=list(self.emotes.keys()))
+                    self.send_callback(swallow_errors, update.Emotes, names=list(self.emotes.keys()))
+
             if u['from'] == self.username:
                 self.channels[u.channel] = Channel(u.channel)
                 self.send(update.Users, channel=u.channel)
-                if not u.channel.startswith('@'): ## Don't request in private channels. Perms are denied anyway.
-                    if self.is_supported('shirakumo-channel-info'):
-                        self.send(update.ChannelInfo, channel=u.channel)
-                    if self.is_supported('shirakumo-backfill'):
-                        self.send(update.Backfill, channel=u.channel)
+                if self.is_supported('shirakumo-channel-info'):
+                    self.send_callback(swallow_errors, update.ChannelInfo, channel=u.channel)
+                if self.is_supported('shirakumo-backfill'):
+                    self.send_callback(swallow_errors, update.Backfill, channel=u.channel)
+
             self.channels[u.channel].join(u['from'])
 
         def leave(self, u):
@@ -367,18 +376,22 @@ class Client:
         elif isinstance(instance, update.UpdateFailure):
             id = instance['update-id']
         (callback, sent) = self.callbacks.pop(id, (None, None))
-        if callback != None:
-            callback(self, sent, instance)
-        
-        for handler in self.handlers.get(instance.__class__, []):
-            handler(self, instance)
-        for handler in self.handlers[update.Update]:
-            handler(self, instance)
-        
-        self.in_flight.pop(id, None)
-        for id in list(self.in_flight):
-            if 600 < (Client.clock() - self.in_flight[id].clock):
-                del self.in_flight[id]
+
+        try:
+            if callback != None:
+                callback(self, sent, instance)
+            for handler in self.handlers.get(instance.__class__, []):
+                handler(self, instance)
+            for handler in self.handlers[update.Update]:
+                handler(self, instance)
+
+        except SwallowUpdate:
+            pass
+        finally:
+            self.in_flight.pop(id, None)
+            for id in list(self.in_flight):
+                if 600 < (Client.clock() - self.in_flight[id].clock):
+                    del self.in_flight[id]
 
     def origin(self, instance):
         """
