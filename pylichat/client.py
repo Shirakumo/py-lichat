@@ -11,6 +11,9 @@ import base64
 import mimetypes
 import os
 import errno
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ConnectionFailed(Exception):
     """Exception thrown when the connection attempt to the server fails for some reason.
@@ -155,6 +158,7 @@ class Client:
             self.send(update.Pong)
 
         def join(self, u):
+            logger.debug(f"join {u} {self.channels=}")
             if self.servername == None:
                 self.servername = u.channel
                 if self.is_supported('shirakumo-emotes'):
@@ -167,6 +171,7 @@ class Client:
                         self.send(update.ChannelInfo, channel=u.channel)
                     if self.is_supported('shirakumo-backfill'):
                         self.send(update.Backfill, channel=u.channel)
+            logger.debug(f"join2 {u} {self.channels=}")
             self.channels[u.channel].join(u['from'])
 
         def leave(self, u):
@@ -306,6 +311,7 @@ class Client:
         """
         instance = self.make_instance(type, **args)
         self.in_flight[instance.id] = instance
+        logger.debug(f"sending {instance}")
         self.send_raw(wire.to_string(instance.to_list()))
         return instance.id
 
@@ -338,6 +344,7 @@ class Client:
         for string in strings:
             (update, _i) = read_update(string)
             if update != None:
+                logger.debug(f"received {update}")
                 updates.append(update)
         return updates
 
@@ -346,6 +353,7 @@ class Client:
 
         This delivers it to the various handler functions.
         """
+        logger.debug(f"handling {instance}")
         id = None
         if instance['from'] == self.username:
             id = instance.id
@@ -403,6 +411,7 @@ class Client:
 
     def send_raw(self, string):
         if self.socket is None:
+            logger.debug("Internal disconnect due to self.socket is None")
             self.handle(update.make_instance(update.Disconnect))
             return
         totalsent = 0
@@ -412,11 +421,13 @@ class Client:
             try:
                 sent = self.socket.send(binary[totalsent:])
                 if sent == 0:
+                    logger.debug("Internal disconnect due to failure to send (sent == 0)")
                     self.handle(update.make_instance(update.Disconnect))
                     return
                 totalsent = totalsent + sent
             except socket.error as e:
                 if e.errno != errno.EAGAIN:
+                    logger.debug("Internal disconnect due to failure to send (socket.error)", exc_info=True)
                     self.handle(update.make_instance(update.Disconnect))
                     return
                 select.select([], [self.socket], [])
