@@ -30,6 +30,12 @@ class ConnectionFailed(Exception):
             message = update.text
         super().__init__(message)
 
+class ConnectionLost(Exception):
+    """Exception thrown when the connection to the server is lost for some reason."""
+
+    def __init__(self, message='Connection lost.'):
+        super().__init__(message)
+
 class Channel:
     """Representation of a channel the client is in.
 
@@ -145,20 +151,12 @@ class Client:
             self.extensions = [x for x in u.extensions if x in update.extensions]
 
         def disconnect(self, u):
-            self.connected = False
-            self.channels.clear()
-            self.chunks = []
-            self.extensions = []
-            if self.socket is not None:
-                self.socket.close()
-                self.socket = None
-            self.callbacks = {}
+            self.disconnect_raw()
         
         def ping(self, u):
             self.send(update.Pong)
 
         def join(self, u):
-            logger.debug(f"join {u} {self.channels=}")
             if self.servername == None:
                 self.servername = u.channel
                 if self.is_supported('shirakumo-emotes'):
@@ -171,7 +169,6 @@ class Client:
                         self.send(update.ChannelInfo, channel=u.channel)
                     if self.is_supported('shirakumo-backfill'):
                         self.send(update.Backfill, channel=u.channel)
-            logger.debug(f"join2 {u} {self.channels=}")
             self.channels[u.channel].join(u['from'])
 
         def leave(self, u):
@@ -294,6 +291,16 @@ class Client:
             self.socket = None
             self.connected = False
 
+    def disconnect_raw(self):
+        self.connected = False
+        self.channels.clear()
+        self.chunks = []
+        self.extensions = []
+        if self.socket is not None:
+            self.socket.close()
+            self.socket = None
+            self.callbacks = {}
+
     def make_instance(self, type, **args):
         """Creates an update instance with default values for from/clock/id.
         
@@ -410,10 +417,6 @@ class Client:
         self.socket.setblocking(0)
 
     def send_raw(self, string):
-        if self.socket is None:
-            logger.debug("Internal disconnect due to self.socket is None")
-            self.handle(update.make_instance(update.Disconnect))
-            return
         totalsent = 0
         binary = string.encode('utf-8') + b'\0'
         length = len(binary)
@@ -421,15 +424,13 @@ class Client:
             try:
                 sent = self.socket.send(binary[totalsent:])
                 if sent == 0:
-                    logger.debug("Internal disconnect due to failure to send (sent == 0)")
-                    self.handle(update.make_instance(update.Disconnect))
-                    return
+                    self.disconnect_raw()
+                    raise ConnectionLost("sent == 0")
                 totalsent = totalsent + sent
             except socket.error as e:
                 if e.errno != errno.EAGAIN:
-                    logger.debug("Internal disconnect due to failure to send (socket.error)", exc_info=True)
-                    self.handle(update.make_instance(update.Disconnect))
-                    return
+                    self.disconnect_raw()
+                    raise ConnectionLost("send error")
                 select.select([], [self.socket], [])
         
     def recv_raw(self, timeout=0):
