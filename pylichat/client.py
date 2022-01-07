@@ -343,6 +343,7 @@ class Client:
         """
         instance = self.make_instance(type, **args)
         self.in_flight[instance.id] = instance
+        logger.debug(f"sending (with callback) {instance}")
         self.callbacks[instance.id] = (callback, instance)
         self.send_raw(wire.to_string(instance.to_list()))
         return instance.id
@@ -386,6 +387,7 @@ class Client:
                 handler(self, instance)
 
         except SwallowUpdate:
+            logger.debug("update swallowed by a handler", exc_info=True)
             pass
         finally:
             self.in_flight.pop(id, None)
