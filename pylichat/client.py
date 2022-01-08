@@ -12,6 +12,7 @@ import mimetypes
 import os
 import errno
 import logging
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +143,7 @@ class Client:
         self.servername = None
         self.connected = False
         self.extensions = []
-        self.id = 0
+        self.id = (int(time.time()) << 16) + random.getrandbits(16)
         self.chunks = []
         self.channels = CaseInsensitiveDict()
         self.emotes = CaseInsensitiveDict()
