@@ -175,7 +175,7 @@ class Client:
                 self.channels[u.channel] = Channel(u.channel)
                 self.send(update.Users, channel=u.channel)
                 if self.is_supported('shirakumo-channel-info'):
-                    self.send_callback(swallow_errors, update.ChannelInfo, channel=u.channel)
+                    self.send_callback(swallow_errors, update.ChannelInfo, channel=u.channel, keys=True)
                 if self.is_supported('shirakumo-backfill'):
                     self.send_callback(swallow_errors, update.Backfill, channel=u.channel)
 
@@ -276,7 +276,7 @@ class Client:
         if self.connected:
             raise ValueError(message="Already connected!")
         self.connect_raw(host=host, port=port, use_ssl=ssl, ssl_options=ssl_options)
-        self.send(update.Connect, password=self.password, version=update.version, extensions=update.extensions)
+        self.send(update.Connect, password=self.password, version=update.version, extensions=list(update.extensions))
         updates = self.recv(timeout)
         if updates:
             if type(updates[0]) is not update.Connect:
