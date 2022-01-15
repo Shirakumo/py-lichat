@@ -137,6 +137,11 @@ def read_symbol(string, i, end):
         i = i+1
         if package == '':
             package = 'keyword'
+
+        # FIXME: Temporary workaround!
+        if package == 'shirakumo':
+            package = 'lichat'
+
         (name, i) = read_token(string, i, end)
         return (intern(name, package), i)
     else:
