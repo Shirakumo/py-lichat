@@ -155,7 +155,7 @@ def parse_spec(*files):
 
 def load_base():
     dirname = os.path.dirname(__file__)
-    parse_spec(os.path.join(dirname, 'lichat.sexpr'),
-               os.path.join(dirname, 'shirakumo.sexpr'))
+    parse_spec(os.path.join(dirname, 'spec/lichat.sexpr'),
+               os.path.join(dirname, 'spec/shirakumo.sexpr'))
 
 load_base()
