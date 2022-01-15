@@ -1,11 +1,13 @@
-from .symbol import kw,li
+from .symbol import kw,li,make_package
+from .wire import from_string
+import os
 import textwrap
 import collections.abc
+import inspect
 
 version = '2.0'
-extensions = ['shirakumo-data', 'shirakumo-backfill', 'shirakumo-emotes', 'shirakumo-edit', 'shirakumo-channel-info', 'shirakumo-quiet', 'shirakumo-pause', 'shirakumo-server-management', 'shirakumo-ip', 'shirakumo-channel-trees', 'shirakumo-bridge', 'shirakumo-reactions', 'shirakumo-block']
-
-class_registry={}
+extensions = set()
+class_registry = {}
 
 class Update(collections.abc.MutableMapping):
     def __init__(self, **kwargs):
@@ -96,123 +98,64 @@ def defclass(symbol, supers=(), fields={}):
                 setattr(instance, field, fields[field])
             else:
                 setattr(instance, field, arg)
+
+    def map_superclass(name):
+        if inspect.isclass(name):
+            return name
+        if type(name) is str:
+            name = li(name)
+        return find_class(name)
+    
+    supers = tuple(map(map_superclass, supers))
                 
     name = to_camelcase(symbol[1])
-    __class__ = type(name, supers+(Update, object), {
+    __class__ = type(name, supers+(object,), {
         '__init__': constructor,
         '__symbol__': symbol
         })
     globals()[name] = __class__
     return register_class(symbol, __class__)
 
-defclass('ping')
-defclass('pong')
-defclass('connect', (), {
-    'password': None,
-    'version': version,
-    'extensions': [] })
-defclass('disconnect')
-defclass('register')
-defclass('channel-update', (), {
-    'channel': None,
-    'bridge': None })
-defclass('target-update', (), {
-    'target': None })
-defclass('text-update', (), {
-    'text': None })
-defclass('join', (ChannelUpdate,))
-defclass('leave', (ChannelUpdate,))
-defclass('create', (ChannelUpdate,))
-defclass('kick', (ChannelUpdate, TargetUpdate))
-defclass('pull', (ChannelUpdate, TargetUpdate))
-defclass('permissions', (ChannelUpdate,), {
-    'permissions': [] })
-defclass('grant', (ChannelUpdate, TargetUpdate), {
-    'update': None})
-defclass('deny', (ChannelUpdate, TargetUpdate), {
-    'update': None})
-defclass('capabilities', (ChannelUpdate,), {
-    'permitted': None})
-defclass('message', (ChannelUpdate, TextUpdate))
-defclass('edit', (ChannelUpdate, TextUpdate))
-defclass('users', (ChannelUpdate,), {
-    'users': [] })
-defclass('channels', (ChannelUpdate,), {
-    'channels': []})
-defclass('user-info', (TargetUpdate,), {
-    'registered': None,
-    'connections': None,
-    'info': None })
-defclass('server-info', (TargetUpdate,), {
-    'attributes': None,
-    'connections': None})
-defclass('backfill', (ChannelUpdate,))
-defclass('data', (ChannelUpdate,), {
-    'content-type': None,
-    'filename': None,
-    'payload': None })
-defclass('emotes', (), {
-    'names': [] })
-defclass('emote', (), {
-    'content-type': None,
-    'name': None,
-    'payload': None })
-defclass('channel-info', (ChannelUpdate,), {
-    'keys': True })
-defclass('set-channel-info', (ChannelUpdate, TextUpdate), {
-    'key': None })
-defclass('set-user-info', (TextUpdate,), {
-    'key': None })
-defclass('pause', (ChannelUpdate,), {
-    'by': 0 })
-defclass('kill', (TargetUpdate,))
-defclass('destroy', (ChannelUpdate,))
-defclass('ban', (TargetUpdate,))
-defclass('unban', (TargetUpdate,))
-defclass('ip-ban', (), {
-    'ip': None,
-    'mask': None})
-defclass('ip-unban', (), {
-    'ip': None,
-    'mask': None})
-defclass('quiet', (ChannelUpdate, TargetUpdate))
-defclass('unquiet', (ChannelUpdate, TargetUpdate))
-defclass('react', (ChannelUpdate,), {
-    'target': None,
-    'update-id': None,
-    'emote': None})
-defclass('block', (TargetUpdate,))
-defclass('unblock', (TargetUpdate,))
+def parse_spec(*files):
+    text = ""
+    for file in files:
+        with open(file) as f:
+            text = text + f.read()
+    
+    classes = {}
+    def parse_expr(expr):
+        if expr[0][1] == 'define-package':
+            make_package(expr[1])
+        elif expr[0][1] == 'define-object':
+            classes[expr[1]] = [
+                set(expr[2]),
+                expr[3:]
+            ]
+        elif expr[0][1] == 'define-object-extension':
+            cls = classes[expr[1]]
+            cls[0] = cls[0].union(set(expr[2]))
+            cls[1] = cls[1] + expr[3:]
+        elif expr[0][1] == 'define-extension':
+            extensions.add(expr[1])
+            for subexpr in expr[2:]:
+                parse_expr(subexpr)
 
-defclass('failure', (TextUpdate,))
-defclass('malformed-update', (Failure,))
-defclass('update-too-long', (Failure,))
-defclass('connection-unstable', (Failure,))
-defclass('too-many-connections', (Failure,))
-defclass('update-failure', (Failure,), {
-    'update-id': None })
-defclass('invalid-update', (UpdateFailure,))
-defclass('username-mismatch', (UpdateFailure,))
-defclass('incompatible-version', (UpdateFailure,), {
-    'compatible-versions': [] })
-defclass('invalid-password', (UpdateFailure,))
-defclass('no-such-profile', (UpdateFailure,))
-defclass('username-taken', (UpdateFailure,))
-defclass('no-such-channel', (UpdateFailure,))
-defclass('already-in-channel', (UpdateFailure,))
-defclass('not-in-channel', (UpdateFailure,))
-defclass('channelname-taken', (UpdateFailure,))
-defclass('bad-name', (UpdateFailure,))
-defclass('insufficient-permissions', (UpdateFailure,))
-defclass('no-such-user', (UpdateFailure,))
-defclass('too-many-updates', (UpdateFailure,))
-defclass('bad-content-type', (UpdateFailure,), {
-    'allowed-content-types': []})
-defclass('no-such-channel-info', (UpdateFailure,), {
-    'key': None })
-defclass('malformed-channel-info', (UpdateFailure,))
-defclass('no-such-user-info', (UpdateFailure,), {
-    'key': None })
-defclass('malformed-user-info', (UpdateFailure,))
-defclass('clock-skewed', (UpdateFailure,))
-defclass('no-such-parent-channel', (UpdateFailure,))
+    start = 0
+    while start < len(text):
+        (expr, end) = from_string(text, start)
+        start = end
+        parse_expr(expr)
+
+    for name in classes:
+        cls = classes[name]
+        slots = {}
+        for slot in cls[1]:
+            slots[slot[0][1]] = None
+        defclass(name, tuple(cls[0]), slots)
+
+def load_base():
+    dirname = os.path.dirname(__file__)
+    parse_spec(os.path.join(dirname, 'lichat.sexpr'),
+               os.path.join(dirname, 'shirakumo.sexpr'))
+
+load_base()
