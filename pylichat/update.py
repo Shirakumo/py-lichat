@@ -108,7 +108,7 @@ def defclass(symbol, supers=(), fields={}):
     supers = tuple(map(map_superclass, supers))
                 
     name = to_camelcase(symbol[1])
-    __class__ = type(name, supers+(object,), {
+    __class__ = type(name, supers+(LichatObject, object), {
         '__init__': constructor,
         '__symbol__': symbol
         })
@@ -152,9 +152,6 @@ def parse_spec(*files):
             slots[slot[0][1]] = None
 
         supers = tuple(cls[0])
-        if len(cls[0]) == 0:
-            supers = (LichatObject, )
-
         defclass(name, supers, slots)
 
 def load_base():
