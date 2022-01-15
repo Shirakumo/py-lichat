@@ -18,13 +18,13 @@ def make_package(name, symbols=[]):
 def delete_package(name):
     del package_table[name.lower()]
 
-def find_symbol(name, package='lichat-protocol'):
+def find_symbol(name, package='lichat'):
     index = find_package(package.lower())
     if index == None:
         raise ValueError('No such package')
     return index.get(name.lower(), None)
 
-def intern(name, package='lichat-protocol'):
+def intern(name, package='lichat'):
     name = name.lower()
     package = package.lower()
     index = find_package(package)
@@ -46,7 +46,7 @@ def kw(name):
     return intern(name, 'keyword')
 
 def li(name):
-    return intern(name, 'lichat-protocol')
+    return intern(name, 'lichat')
 
-make_package('lichat-protocol')
+make_package('lichat')
 make_package('keyword')

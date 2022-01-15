@@ -58,7 +58,7 @@ def _(thing: float):
 def _(thing: tuple):
     if thing[0] == 'keyword':
         return ':'+thing[1]
-    elif thing[0] == 'lichat-protocol':
+    elif thing[0] == 'lichat':
         return thing[1]
     else:
         return thing[0]+':'+thing[1]
