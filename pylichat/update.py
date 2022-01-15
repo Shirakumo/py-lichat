@@ -108,7 +108,7 @@ def defclass(symbol, supers=(), fields={}):
     supers = tuple(map(map_superclass, supers))
                 
     name = to_camelcase(symbol[1])
-    __class__ = type(name, supers+(LichatObject, object), {
+    __class__ = type(name, supers+(LichatObject, ), {
         '__init__': constructor,
         '__symbol__': symbol
         })
