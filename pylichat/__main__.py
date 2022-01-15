@@ -9,7 +9,7 @@ def handle_input(client, line):
     else:
         parts = line.split(' ', 1)
         command = parts[0]
-        argument = parts[1]
+        argument = (parts[1:] or [''])[0]
         if command == '/join':
             client.send(Join, channel=argument)
         elif command == '/leave':
@@ -20,6 +20,8 @@ def handle_input(client, line):
                 client.send(Create)
             else:
                 client.send(Create, channel=argument)
+        elif command == '/quit' or command == '/exit':
+            client.send(Disconnect)
         else:
             print('\n Unknown command {0}'.format(command))
 
@@ -45,17 +47,20 @@ def on_message(client, u):
 def on_join(client, u):
     if u['from'] == client.username:
         client.channel = u.channel
-        print('[{0}] ** {1} Joined'.format(u.channel, u['from']))
+    print('[{0}] ** {1} Joined'.format(u.channel, u['from']))
 
 def on_leave(client, u):
     if client.channel == u.channel:
         client.channel = next(iter(client.channels))
-        print('[{0}] ** {1} Left'.format(u.channel, u['from']))
+    print('[{0}] ** {1} Left'.format(u.channel, u['from']))
 
 class MyClient(Client):
     __slots__ = 'channel'
 
-def main(username=None, host="chat.tymoon.eu", port=1111):
+def main():
+    main_(*sys.argv[1:])
+
+def main_(username=None, host="chat.tymoon.eu", port=1111):
     client = MyClient(username)
     client.channel = None
     client.add_handler(Update, on_misc)
@@ -68,4 +73,4 @@ def main(username=None, host="chat.tymoon.eu", port=1111):
         loop(client)
 
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    main()
