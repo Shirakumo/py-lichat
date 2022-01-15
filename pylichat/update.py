@@ -1,5 +1,5 @@
 from .symbol import kw,li,make_package
-from .wire import from_string
+from .wire import from_string,to_string
 import os
 import textwrap
 import collections.abc
@@ -9,11 +9,10 @@ version = '2.0'
 extensions = set()
 class_registry = {}
 
-class Update(collections.abc.MutableMapping):
+class LichatObject(collections.abc.MutableMapping):
     def __init__(self, **kwargs):
-        self.id = kwargs.get('id', None)
-        self.clock = kwargs.get('clock', None)
-        setattr(self, 'from', kwargs.get('from', None))
+        if len(kwargs) > 0:
+            raise ValueError(f"Unexpected field(s) reached LichatObject constructor; lichat class {to_string(self.__class__.__symbol__)!r} doesn't have field(s) {list(kwargs.keys())}.")
 
     def to_list(self):
         plist = []
@@ -89,15 +88,15 @@ def defclass(symbol, supers=(), fields={}):
     nil_symbol = li('nil')
     
     def constructor(instance, **kwargs):
-        super().__init__(**kwargs)
         for field in fields:
             if type(field) is str:
                 field = field.lower()
-            arg = kwargs.get(field)
+            arg = kwargs.pop(field, None)
             if arg is None or arg is nil_symbol:
                 setattr(instance, field, fields[field])
             else:
                 setattr(instance, field, arg)
+        super().__init__(**kwargs)
 
     def map_superclass(name):
         if inspect.isclass(name):
@@ -151,7 +150,12 @@ def parse_spec(*files):
         slots = {}
         for slot in cls[1]:
             slots[slot[0][1]] = None
-        defclass(name, tuple(cls[0]), slots)
+
+        supers = tuple(cls[0])
+        if len(cls[0]) == 0:
+            supers = (LichatObject, )
+
+        defclass(name, supers, slots)
 
 def load_base():
     dirname = os.path.dirname(__file__)
