@@ -171,7 +171,7 @@ class Client:
                 if self.is_supported('shirakumo-emotes'):
                     self.send_callback(swallow_errors, update.Emotes, names=list(self.emotes.keys()))
 
-            if u['from'] == self.username:
+            if self.is_my_own(u):
                 self.channels[u.channel] = Channel(u.channel)
                 self.send(update.Users, channel=u.channel)
                 if self.is_supported('shirakumo-channel-info'):
@@ -182,7 +182,7 @@ class Client:
             self.channels[u.channel].join(u['from'])
 
         def leave(self, u):
-            if u['from'] == self.username:
+            if self.is_my_own(u):
                 self.channels[u.channel]
             else:
                 self.channels[u.channel].leave(u['from'])
@@ -377,7 +377,7 @@ class Client:
         """
         logger.debug(f"handling {instance!r}")
         id = None
-        if instance['from'] == self.username:
+        if self.is_my_own(instance):
             id = instance.id
         elif isinstance(instance, update.UpdateFailure):
             id = instance['update-id']
@@ -416,6 +416,10 @@ class Client:
     def is_in_flight(self, id):
         """Returns true if the update for the given ID is still in flight."""
         return id in self.in_flight
+
+    def is_my_own(self, instance):
+        """Returns true if the update is from this client, taking bridging into account"""
+        return instance.get('from') == self.username and instance.get('bridge') is None
 
     def loop(self):
         """Perform a basic connection loop of just receiving and handling updates."""
