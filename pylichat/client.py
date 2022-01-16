@@ -326,9 +326,11 @@ class Client:
 
         See make_instance
         """
+        if self.socket is None:
+            raise ConnectionLost("not connected")
         instance = self.make_instance(type, **args)
         self.in_flight[instance.id] = instance
-        logger.debug(f"sending {instance}")
+        logger.debug(f"sending {instance!r}")
         self.send_raw(wire.to_string(instance.to_list()))
         return instance.id
 
@@ -342,9 +344,11 @@ class Client:
 
         See make_instance
         """
+        if self.socket is None:
+            raise ConnectionLost("not connected")
         instance = self.make_instance(type, **args)
         self.in_flight[instance.id] = instance
-        logger.debug(f"sending (with callback) {instance}")
+        logger.debug(f"sending (with callback) {instance!r}")
         self.callbacks[instance.id] = (callback, instance)
         self.send_raw(wire.to_string(instance.to_list()))
         return instance.id
@@ -362,7 +366,7 @@ class Client:
         for string in strings:
             (update, _i) = read_update(string)
             if update != None:
-                logger.debug(f"received {update}")
+                logger.debug(f"received {update!r}")
                 updates.append(update)
         return updates
 
@@ -371,7 +375,7 @@ class Client:
 
         This delivers it to the various handler functions.
         """
-        logger.debug(f"handling {instance}")
+        logger.debug(f"handling {instance!r}")
         id = None
         if instance['from'] == self.username:
             id = instance.id

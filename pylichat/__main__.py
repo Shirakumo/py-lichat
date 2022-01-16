@@ -50,7 +50,7 @@ def on_join(client, u):
     print('[{0}] ** {1} Joined'.format(u.channel, u['from']))
 
 def on_leave(client, u):
-    if client.channel == u.channel:
+    if u['from'] == client.username and client.channel == u.channel:
         client.channel = next(iter(client.channels))
     print('[{0}] ** {1} Left'.format(u.channel, u['from']))
 
