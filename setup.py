@@ -10,7 +10,7 @@ setup(
     description='A library for the Lichat protocol',
     long_description=README,
     license='zlib',
-    author='Nicolas Hafner',
+    author='Yukari Hafner',
     author_email='shinmera@tymoon.eu',
     keywords=['chat','protocol'],
     url='https://github.com/shirakumo/py-lichat',
