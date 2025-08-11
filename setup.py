@@ -13,7 +13,7 @@ setup(
     author='Yukari Hafner',
     author_email='shinmera@tymoon.eu',
     keywords=['chat','protocol'],
-    url='https://github.com/shirakumo/py-lichat',
+    url='https://shirakumo.org/project/py-lichat',
     packages=['pylichat', 'pylichat.spec'],
     package_data={'pylichat.spec': ['*.sexpr']},
     classifiers=[

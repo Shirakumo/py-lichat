@@ -355,9 +355,9 @@ The default port when served over TCP should be ``1111``, with ``1112`` being th
 When specified in URLs, Lichat takes the ``lichat`` protocol and follows this general scheme: ``lichat://host:port/channel#id`` Meaning the URL path (if given) is used as the name for a channel to join. The URL fragment can be used to specify a specific message id. Note that it is the client's responsibility to ensure that the ID is sufficiently unique so that the URL will link to the correct message. The query part of the URL may be used for client-specific purposes.
 
 ## See Also
-- "lichat-tcp-client"(https://shirakumo.github.io/lichat-tcp-client) A basic lisp client
-- "Ocelot"(https://github.com/Shirakumo/ocelot) An Android client
-- "ex-lichat"(https://github.com/Shirakumo/ex-lichat) An advanced Elixir server
-- "lichat-js"(https://github.com/Shirakumo/lichat-js) A JavaScript client and GUI
-- "py-lichat"(https://github.com/Shirakumo/py-lichat) A Python client
-- "weelichat"(https://github.com/Shirakumo/weelichat) A Weechat client script
+- "lichat-tcp-client"(https://shirakumo.org/docs/lichat-tcp-client) A basic lisp client
+- "Ocelot"(https://shirakumo.org/project/ocelot) An Android client
+- "ex-lichat"(https://shirakumo.org/project/ex-lichat) An advanced Elixir server
+- "lichat-js"(https://shirakumo.org/project/lichat-js) A JavaScript client and GUI
+- "py-lichat"(https://shirakumo.org/project/py-lichat) A Python client
+- "weelichat"(https://shirakumo.org/project/weelichat) A Weechat client script

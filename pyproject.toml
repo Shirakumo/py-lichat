@@ -22,8 +22,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/shirakumo/py-lichat"
-"Bug Tracker" = "https://github.com/shirakumo/py-lichat/issues"
+"Homepage" = "https://shirakumo.org/project/py-lichat"
+"Bug Tracker" = "https://shirakumo.org/project/py-lichat/issues"
 
 [project.scripts]
 pylichat = "pylichat.__main__:main"
